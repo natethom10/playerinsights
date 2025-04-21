@@ -1,37 +1,26 @@
-import Lines from "./components/Lines";
-import Nav from "./components/Nav";
-import Footer from "./components/Footer";
-import { useState } from "react";
-import PlayerStats from "./components/PlayerStats";
-
-const lines = [
-  "https://api.linemate.io/api/nba/v1/discovery/cards?premium=true",
-  "https://api.linemate.io/api/nba/v1/discovery/cards?cardGroup=PERFECT_HIT_RATE_RECENT_FORM&premium=true",
-  "https://api.linemate.io/api/nba/v1/discovery/cards?cardGroup=ALTERNATES&premium=true",
-  "https://api.linemate.io/api/nba/v1/discovery/cards?cardGroup=PERFECT_HIT_RATE_ALTERNATES&premium=true",
-  "https://api.linemate.io/api/nba/v1/discovery/cards?cardGroup=RISKY&premium=true",
-];
+import React, { useState } from "react";
+import Navigation from "./frontend/components/Navigation";
+import Recents from "./frontend/components/Recents";
+import Lines from "./frontend/components/Lines";
+import Login from "./frontend/components/Login";
+import Builder from "./frontend/components/Builder";
+import Home from "./frontend/components/Home";
 
 const App = () => {
-  const [player, setPlayer] = useState({
-    player: {
-      player: {
-        SRGUID: "",
-      },
-    },
-  });
-
-  const [line, setLine] = useState(3);
+  const [step, setStep] = useState("home");
+  const [league, setLeague] = useState("nba");
 
   return (
-    <div className="text-white bg-gray-800">
-      <Nav setLine={setLine} />
-      <div className="flex">
-        <Lines url={lines[line]} playerChange={setPlayer} />
-        {/* <PlayerStats player={player.player.SRGUID} /> */}
+    <>
+      <Navigation setStep={setStep} league={league} setLeague={setLeague} />
+      <div className="p-3 text-light">
+        {step === "home" && <Home />}
+        {step === "recents" && <Recents />}
+        {step === "lines" && <Lines league={league}/>}
+        {step === "builder" && <Builder />}
+        {step === "login" && <Login />}
       </div>
-      <Footer />
-    </div>
+    </>
   );
 };
 

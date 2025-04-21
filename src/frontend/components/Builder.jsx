@@ -1,11 +1,11 @@
 import React from 'react'
 
-const Player = () => {
+const Builder = () => {
   return (
     <div>
-      
+      Builder!
     </div>
   )
 }
 
-export default Player
+export default Builder

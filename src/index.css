@@ -1,1 +1,8 @@
-@import "tailwindcss";
+.homepage-name:hover {
+    cursor: pointer;
+}
+
+.player-line:hover {
+    background-color: rgb(196, 196, 196);
+    cursor: pointer;
+}
