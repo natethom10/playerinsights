@@ -17,16 +17,25 @@ const values = {
   POINTS_PLUS_ASSISTS_PLUS_REBOUNDS: "PTS/REB/AST",
   ASSISTS_PLUS_REBOUNDS: "REB/AST",
   STEALS_PLUS_BLOCKS: "STL/BLK",
-  HITTER_SINGLES: "SINGLE",
+  HITTER_SINGLES: "SINGLES",
   HITTER_RUNS: "RUNS",
   HITTER_HITS: "HITS",
   HITTER_HITS_PLUS_RUNS_PLUS_RUNS_BATTED_IN: "HITS/RUN/RBI",
   HITTER_STOLEN_BASES: "SB",
   HITTER_RUNS_BATTED_IN: "RBI",
-  HITTER_DOUBLES: "DOUBLE",
+  HITTER_DOUBLES: "DOUBLES",
   PITCHER_EARNED_RUNS: "ERA",
   HITTER_TOTAL_BASES: "TOTAL BASE",
-  HITTER_TRIPLES: "TRIPLE",
+  HITTER_TRIPLES: "TRIPLES",
+  MONEY_LINE_1Q: "1Q ML",
+  MONEY_LINE_1H: "1H ML",
+  SPREAD_1H: "1H SPREAD",
+  TEAM_TOTAL: "TEAM PTS",
+  SPREAD_1Q: "1Q SPREAD",
+  SPREAD: "SPREAD",
+  GAME_TOTAL: "GAME PTS",
+  GAME_TOTAL_1Q: "1Q PTS",
+  MONEY_LINE: "ML",
 };
 
 const dropdownValues = {
@@ -132,37 +141,43 @@ const Lines = ({ league }) => {
     <>
       {dropdown}
       <div className="d-flex flex-wrap justify-content-center">
-        {data
-          .filter((item) => item.type === "player")
-          .map((item, index) => {
-            console.log(item);
-            return (
-              <Card
-                style={{ minWidth: "20rem", maxWidth: "20rem" }}
-                className="bg-secondary text-light m-1"
-                key={index}
-              >
-                <Card.Title className="d-flex justify-content-between px-1 pt-1">
-                  <div>{item.player.fullName}</div>
-                  <div>{item.team.name}</div>
-                </Card.Title>
-                <Card.Body>
-                  <Card.Text className="fw-bold">
-                    {item.outcome} {item.line} {values[item.market.name]}{" "}
-                    {
-                      item.market.books[item.book][item.outcome].current.odds
-                        .american
-                    }
-                  </Card.Text>
-                  <div>
-                    {item.insights.map((insight, index) => (
-                      <Card.Text key={index}>{insight.description}</Card.Text>
-                    ))}
-                  </div>
-                </Card.Body>
-              </Card>
-            );
-          })}
+        {data.map((item, index) => {
+          console.log(item);
+          return (
+            <Card
+              style={{ minWidth: "20rem", maxWidth: "20rem" }}
+              className="bg-secondary text-light m-1"
+              key={index}
+            >
+              <Card.Title className="d-flex justify-content-between px-2 pt-2">
+                <div>
+                  {item.type === "player"
+                    ? item.player.fullName
+                    : item.team.city + " " + item.team.name}
+                </div>
+                <div>{item.type === "player" ? item.team.code : null}</div>
+              </Card.Title>
+              <Card.Body>
+                <Card.Text className="fw-bold">
+                  {item.outcome == "cover" ? null : item.outcome}{" "}
+                  {item.line == 0 ? null : item.line}{" "}
+                  {item.type === "player"
+                    ? values[item.market.name]
+                    : values[item.market.name]}{" "}
+                  {
+                    item.market.books[item.book][item.outcome].current.odds
+                      .american
+                  }
+                </Card.Text>
+                <div>
+                  {item.insights.map((insight, index) => (
+                    <Card.Text key={index}>{insight.description}</Card.Text>
+                  ))}
+                </div>
+              </Card.Body>
+            </Card>
+          );
+        })}
       </div>
     </>
   );
