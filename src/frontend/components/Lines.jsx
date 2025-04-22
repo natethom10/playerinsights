@@ -116,6 +116,13 @@ const Lines = ({ league }) => {
           >
             Perfect Alternate Lines
           </Dropdown.Item>
+          <Dropdown.Item
+            onClick={() => {
+              setUrl(4);
+            }}
+          >
+            Risky Lines
+          </Dropdown.Item>
         </Dropdown.Menu>
       </Dropdown>
     </>
@@ -145,7 +152,7 @@ const Lines = ({ league }) => {
           console.log(item);
           return (
             <Card
-              style={{ minWidth: "20rem", maxWidth: "20rem" }}
+              style={{ width: "18rem" }}
               className="bg-secondary text-light m-1"
               key={index}
             >
@@ -159,15 +166,19 @@ const Lines = ({ league }) => {
               </Card.Title>
               <Card.Body>
                 <Card.Text className="fw-bold">
+                  {/** Over/Under/etc */}
                   {item.outcome == "cover" ? null : item.outcome}{" "}
+                  {/** What line is being measured */}
                   {item.line == 0 ? null : item.line}{" "}
-                  {item.type === "player"
-                    ? values[item.market.name]
-                    : values[item.market.name]}{" "}
-                  {
-                    item.market.books[item.book][item.outcome].current.odds
-                      .american
-                  }
+                  {/** What does this player/team need to do? */}
+                  {values[item.market.name]}{" "}
+                  {/** What are the odds of the line being displayed */}
+                  {url != 2 && url != 3
+                    ? item.market.books[item.book][item.outcome].current.odds
+                        .american
+                    : item.market.books[item.book][item.outcome].alternates[
+                        item.line
+                      ].odds.american}
                 </Card.Text>
                 <div>
                   {item.insights.map((insight, index) => (
