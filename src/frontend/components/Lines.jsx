@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from "react";
-import { Card, Dropdown, ListGroup } from "react-bootstrap";
+import { Card, Col, Dropdown, Row } from "react-bootstrap";
+import { useNavigate } from "react-router-dom";
 
 const values = {
   POINTS: "PTS",
@@ -36,6 +37,12 @@ const values = {
   GAME_TOTAL: "GAME PTS",
   GAME_TOTAL_1Q: "1Q PTS",
   MONEY_LINE: "ML",
+  PITCHER_HITS_ALLOWED: "HITS ALLOWED",
+  PITCHER_STRIKEOUTS: "STRIKEOUTS",
+  PITCHER_OUTS: "PITCHER OUTS",
+  HITTER_HOME_RUNS: "HRS",
+  GAME_TOTAL_FIRST_5_INNINGS: "FIRST 5 TOTAL",
+  SPREAD_FIRST_5_INNINGS: "FIRST 5 SPREAD",
 };
 
 const dropdownValues = {
@@ -58,9 +65,12 @@ const Lines = ({ league }) => {
   const [url, setUrl] = useState(0);
   const [data, setData] = useState([]);
   const [loading, setLoading] = useState(true);
+  const navigate = useNavigate();
 
   useEffect(() => {
     const fetchData = async () => {
+      setLoading(true);
+      navigate(`/${league}/lines`);
       try {
         const response = await fetch(urls[url]);
         if (!response.ok) {
@@ -84,10 +94,7 @@ const Lines = ({ league }) => {
         <Dropdown.Toggle variant="secondary" style={{ width: "20rem" }}>
           {dropdownValues[url]}
         </Dropdown.Toggle>
-        <Dropdown.Menu
-          style={{ width: "20rem" }}
-          onClick={() => setLoading(true)}
-        >
+        <Dropdown.Menu style={{ width: "20rem" }}>
           <Dropdown.Item
             onClick={() => {
               setUrl(0);
@@ -159,26 +166,32 @@ const Lines = ({ league }) => {
               <Card.Title className="d-flex justify-content-between px-2 pt-2">
                 <div>
                   {item.type === "player"
-                    ? item.player.fullName
+                    ? item.player.fullName + " - " + item.player.position
                     : item.team.city + " " + item.team.name}
                 </div>
                 <div>{item.type === "player" ? item.team.code : null}</div>
               </Card.Title>
               <Card.Body>
                 <Card.Text className="fw-bold">
-                  {/** Over/Under/etc */}
-                  {item.outcome == "cover" ? null : item.outcome}{" "}
-                  {/** What line is being measured */}
-                  {item.line == 0 ? null : item.line}{" "}
-                  {/** What does this player/team need to do? */}
-                  {values[item.market.name]}{" "}
-                  {/** What are the odds of the line being displayed */}
-                  {url != 2 && url != 3
-                    ? item.market.books[item.book][item.outcome].current.odds
-                        .american
-                    : item.market.books[item.book][item.outcome].alternates[
-                        item.line
-                      ].odds.american}
+                  <div className="odds">
+                    {/** Over/Under/etc */}
+                    {item.outcome == "cover" ? null : item.outcome}{" "}
+                    {/** What line is being measured */}
+                    {item.line == 0 ? null : item.line}{" "}
+                    {/** What does this player/team need to do? */}
+                    {values[item.market.name] || item.market.name}{" "}
+                    {/** What are the odds of the line being displayed */}
+                    {(() => {
+                      const odds =
+                        item.alternate === false
+                          ? item.market.books[item.book][item.outcome].current
+                              .odds.american
+                          : item.market.books[item.book][item.outcome]
+                              .alternates[item.line].odds.american;
+
+                      return odds > 0 ? `+${odds}` : odds;
+                    })()}
+                  </div>
                 </Card.Text>
                 <div>
                   {item.insights.map((insight, index) => (
