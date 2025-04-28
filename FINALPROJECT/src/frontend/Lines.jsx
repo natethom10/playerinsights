@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
+import Dropdown from "./Dropdown";
 
 const values = {
   POINTS: "PTS",
@@ -84,14 +85,6 @@ const Lines = ({ league }) => {
       navigate(`/${league}/lines`);
 
       try {
-        const whichUrl = collections[leagueValues[league] + url];
-        if (whichUrl === null) {
-          return (
-            <>
-              <h1>No data.</h1>
-            </>
-          );
-        }
         const response = await fetch(
           `http://localhost:8080/${collections[leagueValues[league] + url]}`
         );
@@ -110,72 +103,58 @@ const Lines = ({ league }) => {
     fetchData();
   }, [url, league]);
 
-  const dropdown = <></>;
-
-  if (loading) {
-    return (
-      <div className="d-flex text-center flex-column">
-        {dropdown}
-        <p>Loading...</p>
-      </div>
-    );
-  } else if (data.length == 0) {
-    return (
-      <div className="d-flex text-center flex-column">
-        {dropdown}
-        <p>No data...</p>
-      </div>
-    );
-  }
-
   return (
     <>
-      {dropdown}
-      <div className="">
-        <div>
-          <button onClick={() => setUrl(0)}>1</button>
-          <button onClick={() => setUrl(1)}>2</button>
-          <button onClick={() => setUrl(2)}>3</button>
-          <button onClick={() => setUrl(3)}>4</button>
-          <button onClick={() => setUrl(4)}>5</button>
+      <div className="grid grid-cols-2">
+        <div className="flex flex-col items-center">
+          <Dropdown setUrl={setUrl} />
+          <div className="w-[50vw] flex flex-wrap justify-center gap-2">
+            {data
+              .filter((item) => {
+                const date = new Date();
+                const day = date.getDate();
+                const month = date.getMonth() + 1;
+                const year = date.getFullYear();
+                const compare = `${year}${
+                  month < 10 ? "0" + month : month
+                }${day}`;
+                return item.gameId.split("-")[0] === compare;
+              })
+              .map((item, index) => {
+                return (
+                  <div className="border w-[288px] p-3" key={index}>
+                    <h1>
+                      {item.type === "player"
+                        ? item.player.fullName +
+                          " " +
+                          item.player.position +
+                          " " +
+                          item.team.code
+                        : item.team.city + " " + item.team.name}
+                    </h1>
+                    <h1 className="text-green-400">
+                      {item.outcome} {item.line} {values[item.market.name]}{" "}
+                      {(() => {
+                        const odds =
+                          item.alternate === false
+                            ? item.market.books[item.book][item.outcome].current
+                                .odds.american
+                            : item.market.books[item.book][item.outcome]
+                                .alternates[item.line].odds.american;
+                        return odds > 100 ? `+${odds}` : odds;
+                      })()}
+                    </h1>
+                    {item.insights.map((insight, index) => {
+                      return <h1 key={index}>{insight.description}</h1>;
+                    })}
+                  </div>
+                );
+              })}
+          </div>
         </div>
-        {data
-          .filter((item) => {
-            const date = new Date();
-            const day = date.getDate();
-            const month = date.getMonth() + 1;
-            const year = date.getFullYear();
-            const compare = `${year}${month < 10 ? "0" + month : month}${day}`;
-            return item.gameId.split("-")[0] === compare;
-          })
-          .map((item, index) => {
-            console.log(item);
-            return (
-              <div className="border w-[288px] p-3" key={index}>
-                <h1>
-                  {item.type === "player"
-                    ? item.player.fullName +
-                      " " +
-                      item.player.position +
-                      " " +
-                      item.team.code
-                    : item.team.city + " " + item.team.name}
-                </h1>
-                <h1>
-                  {item.outcome} {item.line} {values[item.market.name]}{" "}
-                  {item.alternate === false
-                    ? item.market.books[item.book][item.outcome].current.odds
-                        .american
-                    : item.market.books[item.book][item.outcome].alternates[
-                        item.line
-                      ].odds.american}
-                </h1>
-                {item.insights.map((insight, index) => {
-                  return <h1 key={index}>{insight.description}</h1>;
-                })}
-              </div>
-            );
-          })}
+        <div className="text-center">
+          Saved Parlays
+        </div>
       </div>
     </>
   );
