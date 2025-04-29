@@ -11,20 +11,18 @@ const App = () => {
   const [league, setLeague] = useState("nba");
 
   return (
-    <>
-      <Router>
-        <Navigation league={league} setLeague={setLeague} />
-        <div className="p-3 text-light">
-          <Routes>
-            <Route path="/" element={<Home />} />
-            <Route path="/:league/recents" element={<Recents />} />
-            <Route path="/:league/lines" element={<Lines league={league} />} />
-            <Route path="/builder" element={<Builder league={league} />} />
-            <Route path="/login" element={<Login />} />
-          </Routes>
-        </div>
-      </Router>
-    </>
+    <Router>
+      <Navigation league={league} setLeague={setLeague} />
+      <div className="p-3 text-light">
+        <Routes>
+          <Route path="/" element={<Home />} />
+          <Route path="/:league/recents" element={<Recents />} />
+          <Route path="/:league/lines" element={<Lines league={league} />} />
+          <Route path="/builder" element={<Builder league={league} />} />
+          <Route path="/login" element={<Login />} />
+        </Routes>
+      </div>
+    </Router>
   );
 };
 

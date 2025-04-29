@@ -45,14 +45,6 @@ const values = {
   SPREAD_FIRST_5_INNINGS: "FIRST 5 SPREAD",
 };
 
-const dropdownValues = {
-  0: "Base Lines",
-  1: "Perfect Base Lines",
-  2: "Alternate Lines",
-  3: "Perfect Alternate Lines",
-  4: "Risky",
-};
-
 const collections = [
   "MLBbaselines",
   "MLBperfectbaselines",
@@ -78,10 +70,13 @@ const Lines = ({ league }) => {
   const [loading, setLoading] = useState(true);
   const navigate = useNavigate();
   const [data, setData] = useState([]);
+  const [totalParlays, setTotalParlays] = useState([]);
+  const [singleParlay, setSingleParlay] = useState([]);
 
   useEffect(() => {
     const fetchData = async () => {
       setLoading(true);
+      setData([]);
       navigate(`/${league}/lines`);
 
       try {
@@ -103,12 +98,50 @@ const Lines = ({ league }) => {
     fetchData();
   }, [url, league]);
 
+  const handleAddToSlip = (item) => {
+    let alreadyAdded = false;
+    console.log(item);
+    singleParlay.forEach((checked) => {
+      if (checked._id === item._id || checked.description === item.description)
+        alreadyAdded = true;
+    });
+
+    if (!alreadyAdded) setSingleParlay((prevItems) => [...prevItems, item]);
+  };
+
+  const handleRemoveFromSlip = (item) => {
+    let copy = singleParlay;
+    copy = copy.filter((checked) => checked._id !== item._id);
+    setSingleParlay(copy);
+  };
+
+  const handleSaveParlay = () => {
+    setTotalParlays((prevItems) => [...prevItems, singleParlay]);
+    setSingleParlay([]);
+  };
+
+  const handleDeleteParlay = (parlay) => {
+    let copy = totalParlays;
+    copy = copy.filter((checked) => {
+      if (parlay.length !== checked.length) return true;
+
+      for (let i = 0; i < checked.length; i++) {
+        if (checked[i].description !== parlay[i].description) return true;
+      }
+
+      return false;
+    });
+
+    setTotalParlays(copy);
+  };
+
   return (
     <>
-      <div className="grid grid-cols-2">
-        <div className="flex flex-col items-center">
+      <div className="grid grid-cols-4">
+        <div className="flex flex-col items-center col-span-3">
           <Dropdown setUrl={setUrl} />
-          <div className="w-[50vw] flex flex-wrap justify-center gap-2">
+          {loading && <h1>No data...</h1>}
+          <div className="flex flex-wrap justify-center gap-2">
             {data
               .filter((item) => {
                 const date = new Date();
@@ -124,15 +157,19 @@ const Lines = ({ league }) => {
                 return (
                   <div className="border w-[288px] p-3" key={index}>
                     <h1>
-                      {item.type === "player"
-                        ? item.player.fullName +
-                          " " +
-                          item.player.position +
-                          " " +
-                          item.team.code
-                        : item.team.city + " " + item.team.name}
+                      {item.type === "player" ? (
+                        <div className="flex justify-between">
+                          <div className="flex gap-1">
+                            <div>{item.player.fullName}</div>
+                            <div>{item.player.position}</div>
+                          </div>
+                          <div>{item.team.code}</div>
+                        </div>
+                      ) : (
+                        item.team.city + " " + item.team.name
+                      )}
                     </h1>
-                    <h1 className="text-green-400">
+                    <h1 className="text-green-400 font-bold">
                       {item.outcome} {item.line} {values[item.market.name]}{" "}
                       {(() => {
                         const odds =
@@ -147,13 +184,172 @@ const Lines = ({ league }) => {
                     {item.insights.map((insight, index) => {
                       return <h1 key={index}>{insight.description}</h1>;
                     })}
+                    <div className="flex justify-end mt-2">
+                      <button
+                        className="border p-1 rounded-md"
+                        onClick={() => handleAddToSlip(item)}
+                      >
+                        Add To Slip
+                      </button>
+                    </div>
                   </div>
                 );
               })}
           </div>
         </div>
-        <div className="text-center">
-          Saved Parlays
+        <div>
+          <div className="text-center">
+            <h1>Current Parlay:</h1>
+          </div>
+          <div className="border flex flex-col items-center">
+            {singleParlay.map((item, index) => {
+              return (
+                <div
+                  className="p-2 flex w-[100%] justify-between p-3"
+                  key={index}
+                >
+                  <div>
+                    {item.type === "player" ? (
+                      <div className="flex gap-1">
+                        <div className="flex gap-1">
+                          <div>{item.player.fullName}</div>
+                          <div>{item.player.position}</div>
+                        </div>
+                        <div>{item.team.code}</div>
+                      </div>
+                    ) : (
+                      item.team.city + " " + item.team.name
+                    )}
+                    <h1 className="text-green-400 font-bold">
+                      {item.outcome} {item.line} {values[item.market.name]}{" "}
+                      {(() => {
+                        const odds =
+                          item.alternate === false
+                            ? item.market.books[item.book][item.outcome].current
+                                .odds.american
+                            : item.market.books[item.book][item.outcome]
+                                .alternates[item.line].odds.american;
+                        return odds > 100 ? `+${odds}` : odds;
+                      })()}
+                    </h1>
+                  </div>
+                  <div className="flex justify-end mt-2">
+                    <button
+                      className="border p-1 rounded-md"
+                      onClick={() => handleRemoveFromSlip(item)}
+                    >
+                      Delete
+                    </button>
+                  </div>
+                </div>
+              );
+            })}
+            <div className="flex flex-col items-center w-[100%]">
+              <div className="flex items-center">
+                <div className="p-1">$10 profits</div>
+                <div>
+                  $
+                  {(
+                    singleParlay.reduce((accumulator, item) => {
+                      const odds =
+                        item.alternate === false
+                          ? item.market.books[item.book][item.outcome].current
+                              .odds.american
+                          : item.market.books[item.book][item.outcome]
+                              .alternates[item.line].odds.american;
+
+                      const decimal =
+                        odds > 0 ? odds / 100 + 1 : 100 / Math.abs(odds) + 1;
+                      return accumulator * decimal;
+                    }, 1) *
+                      10 -
+                    10
+                  ).toFixed(2)}
+                </div>
+              </div>
+              <div>
+                <button
+                  className="border p-1 rounded-md mb-1"
+                  onClick={handleSaveParlay}
+                >
+                  Save Parlay
+                </button>
+              </div>
+            </div>
+          </div>
+          <div className="text-center my-1">Saved Parlays</div>
+          <div className="flex flex-col gap-2">
+            {totalParlays.map((item, index) => {
+              console.log(item);
+              return (
+                <div className="border p-2 w-[100%]" key={index}>
+                  {item.map((pick, index) => {
+                    return (
+                      <div key={index}>
+                        {pick.type === "player" ? (
+                          <div className="flex gap-1">
+                            <div className="flex gap-1">
+                              <div>{pick.player.fullName}</div>
+                              <div>{pick.player.position}</div>
+                            </div>
+                            <div>{pick.team.code}</div>
+                          </div>
+                        ) : (
+                          pick.team.city + " " + pick.team.name
+                        )}
+                        <h1 className="text-gray-400">
+                          {pick.outcome} {pick.line} {values[pick.market.name]}{" "}
+                          {(() => {
+                            const odds =
+                              pick.alternate === false
+                                ? pick.market.books[pick.book][pick.outcome]
+                                    .current.odds.american
+                                : pick.market.books[pick.book][pick.outcome]
+                                    .alternates[pick.line].odds.american;
+                            return odds > 100 ? `+${odds}` : odds;
+                          })()}
+                        </h1>
+                      </div>
+                    );
+                  })}
+                  <div className="flex w-[100%] justify-between">
+                    <div className="flex items-center gap-1">
+                      <div>$10 profits</div>
+                      <div>
+                        $
+                        {(
+                          item.reduce((accumulator, pick) => {
+                            const odds =
+                              pick.alternate === false
+                                ? pick.market.books[pick.book][pick.outcome]
+                                    .current.odds.american
+                                : pick.market.books[pick.book][pick.outcome]
+                                    .alternates[pick.line].odds.american;
+
+                            const decimal =
+                              odds > 0
+                                ? odds / 100 + 1
+                                : 100 / Math.abs(odds) + 1;
+                            return accumulator * decimal;
+                          }, 1) *
+                            10 -
+                          10
+                        ).toFixed(2)}
+                      </div>
+                    </div>
+                    <div>
+                      <button
+                        className="border rounded-md mb-1"
+                        onClick={() => handleDeleteParlay(item)}
+                      >
+                        Delete Parlay
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
         </div>
       </div>
     </>
